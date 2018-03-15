@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# VERY HARD CODED EXAMPLE THAT I WAS USING FOR TESTING....
+if [ "$1" == "ai" ]; then 
+	if  [ "$2" == "rocket" ]; then
+		cd repos/AI4R/Homework/RocketPID
+	elif [ "$2" == "p2" ]; then
+		cd repos/AI4R/Homework/Project2
+	fi
+fi
