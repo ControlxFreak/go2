@@ -1,10 +1,82 @@
+# --------------------------------------------------------------------- #
 #!/bin/bash
+# go2 
+#
+# Anthony Trezza
+# 12 March 2018
+# anthony.t.trezza@gmail.com
+#
+# License:
+#       TBD
+#
+# Change Log:
+#       - 15 March 2018 trezza go2's birthday! <(^.^)>
+# --------------------------------------------------------------------- #
 
-# VERY HARD CODED EXAMPLE THAT I WAS USING FOR TESTING....
-if [ "$1" == "ai" ]; then 
-	if  [ "$2" == "rocket" ]; then
-		cd repos/AI4R/Homework/RocketPID
-	elif [ "$2" == "p2" ]; then
-		cd repos/AI4R/Homework/Project2
-	fi
+# 0. Define some important variables
+CONFDIR="$HOME/.config/nickname"
+CONFILE="$CONFDIR/nickname.conf"
+
+# 1. Check the number of inputs
+if [ "$#" -eq 0 -o "$#" -gt 2 ]; then
+        printf "Invalid Number of Input Arguments.\nSee go2 --help for usage.\n"
+       	return 
 fi
+
+# 2. Check if the first input is the "--help" string
+if [ "$1" == "--help" -o "$1" == "-h" ]; then
+	echo "TODO"
+        return 
+
+elif [ "$1" == "--print" -o "$1" == "-p" ]; then
+	./nickname --print
+        return 
+fi
+
+# 3. Check to see if the configuration file exists
+if [ ! -f "$CONFILE" ];then
+	echo "No Configuration File Found."
+	echo "Please make one using: "
+	echo "\tnickname /path/to/dir/ my_nickname"
+	echo "\tor"
+	echo "\tgo2 -nn /path/to/dir/ my_nickname"
+	return
+fi
+
+# FOR NOW
+NN=$1
+
+# 4. Verify that this nickname is mapped to a dir in the config file.
+while IFS='' read -r line || [[ -n "$line" ]]; do
+
+	index=0
+        for entry in $(echo $line | sed "s/,/ /g"); do
+        	if [ $index == 0 ]; then
+                	ENTRY_NN="$entry"
+                elif [ $index == 1 ]; then
+                	ENTRY_DIR="$entry"
+                fi
+
+                ((index = index + 1))
+        done
+
+	if [ "$ENTRY_NN" == "$NN" ]; then
+		if [ -d "$ENTRY_DIR" ]; then
+			echo "cd: $ENTRY_DIR"
+			cd $(echo "$ENTRY_DIR" | tr -d '\r')
+			return	
+		else
+			echo "Error: Nickname Mapping to an invalid directory "
+			echo "$ENTRY_NN -> $ENTRY_DIR"
+			echo "TODO: DELETE?"
+			return	
+		fi
+	fi
+done < "$CONFILE"
+
+# 5. If we got here, we didn't find any directories with that nickname
+echo "No directories found with that nickname."
+echo "To create one, use:"
+echo "nickname /path/to/dir my_nickname"
+echo "or"
+echo "go2 -nn /path/to/dir my_nickname"
