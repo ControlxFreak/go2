@@ -17,21 +17,49 @@
 
 # 0. Define a helper function
 function verify_config {
-	# Default to correct
-	rc=0
-	echo "$DIR $NN $CONFILE"
 	
 	# Read through the file and check for the directory or nickname 
 	while IFS='' read -r line || [[ -n "$line" ]]; do
-		echo "$line"	
-		for i in $(echo $line | sed "s/,/ /g")
-		do
-			echo "$i"	
-			if [ "$DIR" == "$i" -o "$NN" == "$i" ]; then
-				rc=-1
-				return
+		
+		index=0
+		for entry in $(echo $line | sed "s/,/ /g"); do
+			if [ $index == 0 ]; then
+				ENTRY_NN="$entry"
+			elif [ $index == 1 ]; then
+				ENTRY_DIR="$entry"	
 			fi
+
+			((index = index + 1))
 		done
+
+		if [ "$ENTRY_NN" == "$NN" ]; then
+			echo "Nickname already in use."
+			echo "$NN -> $ENTRY_DIR"
+			exit
+		fi
+
+		echo "$ENTRY_DIR"
+		echo "$DIR"
+		if [ "$ENTRY_DIR" == "$DIR" ]; then
+			echo "Directory already in use."
+			echo "$ENTRY_NN -> $ENTRY_DIR"
+			echo "Do you want to renickname this directory?"
+			
+			read yn </dev/tty
+			case $yn in
+			"Yes"|"yes"|"y"|"Y")
+				echo "$line"
+				echo "/$ENTRY_NN/d"
+				echo $CONFILE
+				sed -i "/$ENTRY_NN/d" $CONFILE
+				echo "$ENTRY_NN -> $ENTRY_DIR Nickname Deleted."
+				return;;
+			"No"|"no"|"n"|"N")
+				echo "Exiting..."
+				exit;;
+			esac
+		fi
+
 	done < "$CONFILE"
 }
 
@@ -69,14 +97,21 @@ elif [ "$#" -eq 2 ]; then
 fi
 
 # 4. Check to see if the config file exists, if it doesn't make it!
-CONFDIR="$HOME/.config/nickname" 
+#CONFDIR="$HOME/.config/nickname" 
+CONFDIR="$HOME/repos/go2"
 CONFILE="$CONFDIR/nickname.conf"
 if [ ! -d "$CONFDIR" ]; then
 	echo "Creating $CONFILE"
 	mkdir "$CONFDIR"
-	touch "$CONFDIR/nickname.conf" 
+	touch "$CONFILE" 
+fi
+
+if [ ! -f "$CONFILE" ];then
+	echo "Creating $CONFILE"
+	touch "$CONFILE"
 fi
 
 # 4. Read and check the config file to ensure the directory 
 verify_config "$DIR" "$NN" "$CONFILE"
-echo $rc
+
+
