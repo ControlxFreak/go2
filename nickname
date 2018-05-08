@@ -2,7 +2,9 @@
 #!/bin/bash
 # nickname
 # 	A handy helper function to create the .config/nickname.conf file.
-#	The goal of this configuration file is to generate nicknames for directories so the go2 function can easily lookup a nickname and change the directory to that associated location.
+#	The goal of this configuration file is to generate nicknames for 
+#	directories so the go2 function can easily lookup a nickname and 
+#	change the directory to that associated location.
 #
 # Anthony Trezza
 # 12 March 2018
@@ -13,127 +15,161 @@
 #
 # Change Log:
 #	- 12 March 2018 trezza nickname's birthday! <(^.^)>
+#	- 08 May 2018 trezza converted to getopts.  Woah, that's handy.
+# TODO:
+# 	- Input Checking to prevent some weird super hacker from embedding 
+# 	  something malicious... and/or from stupid people :)
 # --------------------------------------------------------------------- #
 
-# 0. Define some important variables and functions
+# 0. Define variables and functions
 CONFDIR="$HOME/.config/nickname" 
 CONFILE="$CONFDIR/nickname.conf"
+NICKNAMEDIR=$(pwd)
+NICKNAME=""
 
-function verify_config {
-	
-	# Read through the file and check for the directory or nickname 
-	while IFS='' read -r line || [[ -n "$line" ]]; do
-		
-		index=0
-		for entry in $(echo $line | sed "s/,/ /g"); do
-			if [ $index == 0 ]; then
-				ENTRY_NN="$entry"
-			elif [ $index == 1 ]; then
-				ENTRY_DIR="$entry"	
-			fi
+function usage() {
+	echo "Usage:"
+	echo "   $0 [-hp]"
+	echo "   $0 mynickname"
+	echo "   $0 mynickname -d <path/to/directory>"
+	echo "   -h    Display Help."
+	echo "   -p    Print the contents of the nickname file to the console."
+	echo "   -d    Directory you wish to nickname [default=pwd]"
+} # usage()
 
-			((index = index + 1))
-		done
+function help() { 
+	echo "$0:"
+	echo "    A handy tool for creating directory nickname associations that get stored in the $HOME/config/nickname.conf file."
+	echo "   This configuration file will ultimately be used by the go2 tool to help change directory faster and easier."
+	echo ""
+	usage
+	echo ""
+	echo "Example:"
+	echo "To nickname the directory '$HOME/bin/go2' as 'go2'"
+	echo "   $0 go2 $HOME/bin/go2"
+	echo "To see the contents of your nickname file"
+	echo "   $0 -p"
+} # help()
 
-		if [ "$ENTRY_NN" == "$NN" ]; then
-			echo "Nickname already in use."
-			echo "$NN -> $ENTRY_DIR"
-			exit
-		fi
+function print() {
+         echo "Nickname associations:"
+          # Read through the file and check for the directory or nickname 
+          while IFS='' read -r line || [[ -n "$line" ]]; do
+                  index=0
+                  for entry in $(echo $line | sed "s/,/ /g"); do
+                          if [ $index == 0 ]; then
+                                  ENTRY_NN="$entry"
+                          elif [ $index == 1 ]; then
+                                  ENTRY_DIR="$entry"
+                          fi
+                          ((index = index + 1))
+                  done
+                  echo "$ENTRY_NN -> $ENTRY_DIR"
+          done < "$CONFILE"
+} # print()
 
-		if [ "$ENTRY_DIR" == "$DIR" ]; then
-			echo "Directory already in use."
-			echo "$ENTRY_NN -> $ENTRY_DIR"
-			echo "Do you want to renickname this directory?"
-			
-			read yn </dev/tty
-			case $yn in
-			"Yes"|"yes"|"y"|"Y")
-				sed -i "/$ENTRY_NN/d" $CONFILE
-				echo "$ENTRY_NN -> $ENTRY_DIR Nickname Deleted."
-				return;;
-			"No"|"no"|"n"|"N")
+  function verify_config {
+        # Read through the file and check for the directory or nickname 
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+                index=0
+                for entry in $(echo $line | sed "s/,/ /g"); do
+                        if [ $index == 0 ]; then
+                                ENTRY_NN="$entry"
+                        elif [ $index == 1 ]; then
+                                ENTRY_DIR="$entry"
+                        fi
+                        ((index = index + 1))
+                done
+
+                if [ "$ENTRY_NN" == "$NICKNAME" ]; then
+                        echo "Nickname already in use."
+                        echo "$NICKNAME -> $ENTRY_DIR"
+                        exit 1;
+                fi
+
+                if [ "$ENTRY_DIR" == "$NICKNAMEDIR" ]; then
+                        echo "Directory already in use."
+                        echo "$ENTRY_NN -> $ENTRY_DIR"
+                        echo "Do you want to renickname this directory?"
+
+                        read yn </dev/tty
+                        case $yn in
+                        "Yes"|"yes"|"y"|"Y")
+                                sed -i "/$ENTRY_NN/d" $CONFILE
+                                echo "$ENTRY_NN -> $ENTRY_DIR Nickname Deleted."
+                                return
+				;;
+                        "No"|"no"|"n"|"N")
+                                echo "Exiting..."
+                                exit 0
+				;;
+			* )
+				echo "Invalid Response."
 				echo "Exiting..."
-				exit;;
-			esac
-		fi
+				exit 1
+				;;
+                        esac
+                fi
 
-	done < "$CONFILE"
+        done < "$CONFILE"
 }
 
-# 1. Check the number of inputs
-if [ "$#" -eq 0 -o "$#" -gt 2 ]; then
-	printf "Invalid Number of Input Arguments.\nSee nickname --help for usage.\n"
+# 1. Parse the options
+if [ "$#" -eq 0 ]; then
+	usage
 	exit 1
 fi
 
-# 2. Check if the first input is the "--help" string
-if [ "$1" == "--help" -o "$1" == "-h" ]; then
-	printf "nickname:\n"
-	printf "\tA handy tool for creating directory nickname associations that get stored in the $HOME/config/nickname.conf file.\n"
-	printf "\tThis configuration file will ultimately be used by the go2 tool to help change directory faster and easier.\n"
-	printf "Usage: \n"
-	printf "\tSpecify a directory to nickname:\n"
-	printf "\t\tnickname /path/to/dir mynickname\n"
-	printf "\tNickname the current working directory:\n"
-	printf "\t\tnickname mynickname\n"
-	
-	exit
+while getopts ":hpd:" opt; do
+	case ${opt} in
+		h ) 
+		  help
+		  exit 0
+	   	  ;;
+		p )
+		  print
+		  exit 0
+		  ;;
+		d )
+		  NICKNAMEDIR=${OPTARG}
+		  if [ ! -d "$NICKNAMEDIR" ]; then
+			echo "Input Nickname Dirctory: $NICKNAMEDIR Does Not Exist"
+			exit 1
+		  fi
+		  ;;	
+		\? )
+		  echo "Invalid Input: -$OPTARG"
+		  usage
+		  exit 1
+		  ;;
+		: )
+		  echo "Invalid Option: -$OPTARG requires an argument" 
+		  usage
+		  exit 1
+		  ;;
+	esac
+done
+shift $((OPTIND -1))
 
-elif [ "$1" == "--print" -o "$1" == "-p" ]; then
-	echo "Nickname associations:"
-	# Read through the file and check for the directory or nickname 
-	while IFS='' read -r line || [[ -n "$line" ]]; do
-		
-		index=0
+# 2. Grab the nickname 
+NICKNAME=$1
 
-		for entry in $(echo $line | sed "s/,/ /g"); do
-			if [ $index == 0 ]; then
-				ENTRY_NN="$entry"
-			elif [ $index == 1 ]; then
-				ENTRY_DIR="$entry"	
-			fi
-
-			((index = index + 1))
-		done
-		
-		echo "$ENTRY_NN -> $ENTRY_DIR"
-
-	done < "$CONFILE"
-	exit
-fi
-
-# 3. Parse and check the input
-if [ "$#" -eq 1 ]; then
-	DIR="$PWD"
-	NN="$1"
-elif [ "$#" -eq 2 ]; then
-	# If an directory input was given, check to make sure it is valid
-	if [ ! -d "$1" ]; then
-		printf "Invalid directory: %s.\nPlease entery a valid directory to be nicknamed.\n", "$1"
-		exit 1
-	fi		
-	
-	DIR="$1"
-	NN="$2"	
-fi
-
-# 4. Check to see if the config file exists, if it doesn't make it!
+# 3. Check to see if the config file exists, if it doesn't, make it!
 if [ ! -d "$CONFDIR" ]; then
-	echo "Creating $CONFILE"
-	mkdir "$CONFDIR"
-	touch "$CONFILE" 
+        echo "Creating $CONFILE"
+        mkdir "$CONFDIR"
+        touch "$CONFILE"
 fi
-
+  
 if [ ! -f "$CONFILE" ];then
-	echo "Creating $CONFILE"
-	touch "$CONFILE"
+        echo "Creating $CONFILE"
+        touch "$CONFILE"
 fi
 
 # 4. Read and check the config file to ensure the directory 
-verify_config "$DIR" "$NN" "$CONFILE"
+verify_config
 
 # 5. If we made it here, then we must be ready to append to the file!
-echo "Creating nickname mapping: $NN -> $DIR"
-echo "$NN,$DIR" >> $CONFILE
+echo "Creating nickname mapping: $NICKNAME -> $NICKNAMEDIR"
+echo "$NICKNAME,$NICKNAMEDIR" >> $CONFILE
 echo "Complete!"
