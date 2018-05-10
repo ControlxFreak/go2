@@ -11,13 +11,36 @@
 # anthony.t.trezza@gmail.com
 #
 # License:
-#	TBD
+#      MIT License
+#       
+#       Copyright (c) 2018 Anthony Trezza
+#
+#       Permission is hereby granted, free of charge, to any person 
+#       obtaining a copy of this software and associated documentation 
+#       files (the "Software"), to deal in the Software without restriction,
+#       including without limitation the rights to use, copy, modify, merge,
+#       publish, distribute, sublicense, and/or sell copies of the Software, 
+#       and to permit persons to whom the Software is furnished to do so, 
+#       subject to the following conditions:
+#       
+#       The above copyright notice and this permission notice shall be 
+#       included in all copies or substantial portions of the Software.
+#
+#       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+#       EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+#       OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+#       NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+#       BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+#       ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#       CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#       SOFTWARE.
 #
 # Change Log:
 #	- 12 March 2018 trezza nickname's birthday! <(^.^)>
 #	- 08 May 2018 trezza converted to getopts.  Woah, that's handy.
+#	- 09 May 2018 trezza added MIT license
 # TODO:
-# 	- Input Checking to prevent some weird super hacker from embedding 
+# 	- Input checking to prevent some weird super hacker from embedding 
 # 	  something malicious... and/or from stupid people :)
 # --------------------------------------------------------------------- #
 
@@ -39,16 +62,16 @@ function usage() {
 
 function help() { 
 	echo "$0:"
-	echo "    A handy tool for creating directory nickname associations that get stored in the $HOME/config/nickname.conf file."
+	echo "    A handy tool for creating directory nickname associations that get stored in the $CONFILE file."
 	echo "   This configuration file will ultimately be used by the go2 tool to help change directory faster and easier."
 	echo ""
 	usage
 	echo ""
 	echo "Example:"
-	echo "To nickname the directory '$HOME/bin/go2' as 'go2'"
-	echo "   $0 go2 $HOME/bin/go2"
-	echo "To see the contents of your nickname file"
-	echo "   $0 -p"
+	echo "   To nickname the directory '$HOME/bin/go2' as 'go2'"
+	echo "      $0 go2 $HOME/bin/go2"
+	echo "   To see the contents of your nickname file"
+	echo "      $0 -p"
 } # help()
 
 function print() {
@@ -116,6 +139,7 @@ function print() {
 
 # 1. Parse the options
 if [ "$#" -eq 0 ]; then
+	echo "No Input Provided."
 	usage
 	exit 1
 fi
@@ -152,7 +176,7 @@ done
 shift $((OPTIND -1))
 
 # 2. Grab the nickname 
-NICKNAME=$1
+NICKNAME=$1 # TODO check.
 
 # 3. Check to see if the config file exists, if it doesn't, make it!
 if [ ! -d "$CONFDIR" ]; then

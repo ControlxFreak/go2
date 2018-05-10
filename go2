@@ -1,82 +1,187 @@
 # --------------------------------------------------------------------- #
 #!/bin/bash
 # go2 
+# 	A handy tool to quickly navigate to commonly used, nicknamed
+# 	directories.  This tool utilizes the accompanying nickname 
+# 	tool to generate a .config/nickname.conf file to store its 
+# 	nickname -> directory relationships.
 #
 # Anthony Trezza
 # 12 March 2018
 # anthony.t.trezza@gmail.com
 #
 # License:
-#       TBD
+#      MIT License
+#	
+#	Copyright (c) 2018 Anthony Trezza
+#
+#	Permission is hereby granted, free of charge, to any person 
+#	obtaining a copy of this software and associated documentation 
+#	files (the "Software"), to deal in the Software without restriction,
+#	including without limitation the rights	to use, copy, modify, merge,
+#	publish, distribute, sublicense, and/or sell copies of the Software, 
+#	and to permit persons to whom the Software is furnished to do so, 
+#	subject to the following conditions:
+#	
+#	The above copyright notice and this permission notice shall be 
+#	included in all	copies or substantial portions of the Software.
+#
+#	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+#	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+#	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+#	NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+#	BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+#	ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#	SOFTWARE.
+# 
 #
 # Change Log:
 #       - 15 March 2018 trezza go2's birthday! <(^.^)>
+#       - 08 May 2018 trezza converted to getopts.  Super handy!
+# TODO:
+# 	- Input checking
+# 	- Delete a nickname
+# 	- Directory searching if no nickname found
+# 	- go2 <directory> <- basically acting just like a cd wrapper
 # --------------------------------------------------------------------- #
 
-# 0. Define some important variables
+# 0. Define important variables 
 CONFDIR="$HOME/.config/nickname"
 CONFILE="$CONFDIR/nickname.conf"
+CREATENICKNAME=false
+DELETENICKNAME=false # UNSUPPORTED YET
+NICKNAMEDIR=$(pwd)
+NICKNAME=""
+
+function usage() {
+	echo "Usage:"
+	echo "   $0 [-hp]"
+	echo "   $0 mynickname"
+	echo "	 $0 -n nickname"
+	echo "	 $0 -n nickname -d <path/to/directory>"
+	echo "   -h Display Help."
+	echo "   -p Print the contents of the nickname file to the console." 
+	echo "   -n Create a nickname association for the given directory."
+	echo "   -d Directory you wish to nickname [default=pwd]"
+} # usage()
+
+function help() {
+	echo "$0:"
+	echo "  A handy tool for quick navigation to commonly used, nicknamed"
+	echo "	directories.  This tool utilizes the accompanying 'nickname'"
+	echo "  tool to generate a nickname.conf file to store its"
+	echo "  nickname->directory mappings."
+	echo "  The main benefits of utilizing go2 over either aliasing cd"
+	echo "  directories or creating enviornment variables is that everything"
+	echo "  is self contained in an easy to use, view and modify" 
+	echo "  configuration file."
+	echo ""
+	usage	
+	echo ""
+	echo "Example:"
+	echo "   To nickname the directory '$HOME/bin/repo' as 'myrepo'"
+	echo "      $0 -n myrepo -d $HOME/bin/repo"
+	echo "   or"
+	echo "      nickname myrepo -d $HOME/bin/repo"
+	echo "   To change directories to '$HOME/bin/repo' using the 'myrepo' nickname"
+	echo "      $0 myrepo"
+	echo "   To see the contents of the nickname file"
+	echo "      $0 -p"
+	echo "   or"
+	echo "      nickname -p"
+} # help()
+
+function execute() {
+	while IFS='' read -r line || [[ -n "$line" ]]; do
+  
+		index=0
+       		for entry in $(echo $line | sed "s/,/ /g"); do
+                	if [ $index == 0 ]; then
+                       		ENTRY_NN="$entry"
+                	elif [ $index == 1 ]; then
+                        	ENTRY_DIR="$entry"
+                	fi
+                	((index = index + 1))
+        	done
+
+        	if [ "$ENTRY_NN" == "$NICKNAME" ]; then
+	                if [ -d "$ENTRY_DIR" ]; then
+                        	echo "cd: $ENTRY_DIR"
+                        	cd $(echo "$ENTRY_DIR" | tr -d '\r')
+                        	exit 0	
+                	else
+                       		echo "Error: Nickname Mapping to an invalid directory "
+                        	echo "$ENTRY_NN -> $ENTRY_DIR"
+				echo "TODO: Delete?"
+                        	exit 1	
+                	fi
+        	fi
+	done < "$CONFILE"
+} # execute()
 
 # 1. Check the number of inputs
-if [ "$#" -eq 0 -o "$#" -gt 2 ]; then
-        printf "Invalid Number of Input Arguments.\nSee go2 --help for usage.\n"
-       	return 
+if [ "$#" -eq 0 ]; then
+	echo "No Input Provided."
+	usage
+	exit 1
+	
 fi
 
-# 2. Check if the first input is the "--help" string
-if [ "$1" == "--help" -o "$1" == "-h" ]; then
+# 2. Parse the inputs
+while getopts ":hpn:d:" opt; do
+	case ${opt} in
+		h )
+		   help
+		   exit 0
+		   ;;
+		p )	
+		   nickname -p
+		   exit 0
+		   ;;
+		n )
+		   NICKNAME=${OPTARG}
+		   CREATENICKNAME=true
+		   ;;
+		d )
+		   NICKNAMEDIR=${OPTARG}
+                   if [ ! -d "$NICKNAMEDIR" ]; then
+                         echo "Input Nickname Dirctory: $NICKNAMEDIR Does Not Exist"
+                         exit 1
+                   fi
+                   ;;
+		\? )
+		   echo "Invalid Input: -$OPTARG"
+		   usage
+		   exit 1
+		   ;;
+		: )
+		   echo "Invalid Option: -$OPTARG requires an argument"
+		   usage
+		   exit 1
+		   ;;
+	esac
+done
+shift $((OPTIND -1))	
+
+# 3. If we received either the -n or -r commands, execute them!
+if [ "$CREATE_NICKNAME" = true ] ; then
+	nickname NICKNAME -d NICKNAMEDIR 
+	exit 0
+fi
+
+if [ "$DELETE_NICKNAME" = true ] ; then
 	echo "TODO"
-        return 
-
-elif [ "$1" == "--print" -o "$1" == "-p" ]; then
-	nickname --print
-        return 
+	exit 0
 fi
 
-# 3. Check to see if the configuration file exists
-if [ ! -f "$CONFILE" ];then
-	echo "No Configuration File Found."
-	echo "Please make one using: "
-	echo "\tnickname /path/to/dir/ my_nickname"
-	echo "\tor"
-	echo "\tgo2 -nn /path/to/dir/ my_nickname"
-	return
-fi
+# 4. Yippie! we are going to a directory.  That means the nickname should be the first input
+NICKNAME=$1 # TODO check.
 
-# FOR NOW
-NN=$1
+# 5. verify that this nickname is mapped to a directory in the config file and execute
+execute
 
-# 4. Verify that this nickname is mapped to a dir in the config file.
-while IFS='' read -r line || [[ -n "$line" ]]; do
-
-	index=0
-        for entry in $(echo $line | sed "s/,/ /g"); do
-        	if [ $index == 0 ]; then
-                	ENTRY_NN="$entry"
-                elif [ $index == 1 ]; then
-                	ENTRY_DIR="$entry"
-                fi
-
-                ((index = index + 1))
-        done
-
-	if [ "$ENTRY_NN" == "$NN" ]; then
-		if [ -d "$ENTRY_DIR" ]; then
-			echo "cd: $ENTRY_DIR"
-			cd $(echo "$ENTRY_DIR" | tr -d '\r')
-			return	
-		else
-			echo "Error: Nickname Mapping to an invalid directory "
-			echo "$ENTRY_NN -> $ENTRY_DIR"
-			echo "TODO: DELETE?"
-			return	
-		fi
-	fi
-done < "$CONFILE"
-
-# 5. If we got here, we didn't find any directories with that nickname
+# 6. If we got here, we didn't find any directories with that nickname
 echo "No directories found with that nickname."
-echo "To create one, use:"
-echo "nickname /path/to/dir my_nickname"
-echo "or"
-echo "go2 -nn /path/to/dir my_nickname"
+echo "Possible nicknames:"
+nickname -p
