@@ -54,7 +54,7 @@ function usage() {
 	echo "Usage:"
 	echo "   $0 [-hp]"
 	echo "   $0 mynickname"
-	echo "   $0 mynickname -d <path/to/directory>"
+	echo "   $0 -d <path/to/directory> mynickname"
 	echo "   -h    Display Help."
 	echo "   -p    Print the contents of the nickname file to the console."
 	echo "   -d    Directory you wish to nickname [default=pwd]"
@@ -68,8 +68,8 @@ function help() {
 	usage
 	echo ""
 	echo "Example:"
-	echo "   To nickname the directory '$HOME/bin/go2' as 'go2'"
-	echo "      $0 go2 $HOME/bin/go2"
+	echo "   To nickname the directory '$HOME/bin/repo' as 'myrepo'"
+	echo "      $0 -d $HOME/bin/repo myrepo"
 	echo "   To see the contents of your nickname file"
 	echo "      $0 -p"
 } # help()
@@ -91,50 +91,50 @@ function print() {
           done < "$CONFILE"
 } # print()
 
-  function verify_config {
-        # Read through the file and check for the directory or nickname 
-        while IFS='' read -r line || [[ -n "$line" ]]; do
-                index=0
-                for entry in $(echo $line | sed "s/,/ /g"); do
-                        if [ $index == 0 ]; then
-                                ENTRY_NN="$entry"
-                        elif [ $index == 1 ]; then
-                                ENTRY_DIR="$entry"
-                        fi
-                        ((index = index + 1))
-                done
+function verify_config {
+      # Read through the file and check for the directory or nickname 
+      while IFS='' read -r line || [[ -n "$line" ]]; do
+              index=0
+              for entry in $(echo $line | sed "s/,/ /g"); do
+                      if [ $index == 0 ]; then
+                              ENTRY_NN="$entry"
+                      elif [ $index == 1 ]; then
+                              ENTRY_DIR="$entry"
+                      fi
+                      ((index = index + 1))
+              done
 
-                if [ "$ENTRY_NN" == "$NICKNAME" ]; then
-                        echo "Nickname already in use."
-                        echo "$NICKNAME -> $ENTRY_DIR"
-                        exit 1;
-                fi
+              if [ "$ENTRY_NN" == "$NICKNAME" ]; then
+                      echo "Nickname already in use."
+                      echo "$NICKNAME -> $ENTRY_DIR"
+                      exit 1;
+              fi
 
-                if [ "$ENTRY_DIR" == "$NICKNAMEDIR" ]; then
-                        echo "Directory already in use."
-                        echo "$ENTRY_NN -> $ENTRY_DIR"
-                        echo "Do you want to renickname this directory?"
+              if [ "$ENTRY_DIR" == "$NICKNAMEDIR" ]; then
+                      echo "Directory already in use."
+                      echo "$ENTRY_NN -> $ENTRY_DIR"
+                      echo "Do you want to renickname this directory?"
 
-                        read yn </dev/tty
-                        case $yn in
-                        "Yes"|"yes"|"y"|"Y")
-                                sed -i "/$ENTRY_NN/d" $CONFILE
-                                echo "$ENTRY_NN -> $ENTRY_DIR Nickname Deleted."
-                                return
-				;;
-                        "No"|"no"|"n"|"N")
-                                echo "Exiting..."
-                                exit 0
-				;;
-			* )
-				echo "Invalid Response."
-				echo "Exiting..."
-				exit 1
-				;;
-                        esac
-                fi
+                      read yn </dev/tty
+                      case $yn in
+                      "Yes"|"yes"|"y"|"Y")
+                              sed -i "/$ENTRY_NN/d" $CONFILE
+                              echo "$ENTRY_NN -> $ENTRY_DIR Nickname Deleted."
+                              return
+	   		      ;;
+                      "No"|"no"|"n"|"N")
+                              echo "Exiting..."
+                              exit 0
+			      ;;
+		      * )
+		              echo "Invalid Response."
+			      echo "Exiting..."
+			      exit 1
+			      ;;
+                      esac
+              fi
 
-        done < "$CONFILE"
+      done < "$CONFILE"
 }
 
 # 1. Parse the options
