@@ -39,21 +39,17 @@
 # Change Log:
 #       - 15 March 2018 trezza go2's birthday! <(^.^)>
 #       - 08 May 2018 trezza converted to getopts.  Super handy!
+#       - 11 May 2018 trezza fixed bug issue 4 -> couldn't use getopts twice
+#       - 18 May 2018 trezza moved everything to a function so variables do not
+#         remain persistent in the current bash.
 # TODO:
 # 	- Input checking
 # 	- Delete a nickname
 # 	- Directory searching if no nickname found
 # 	- go2 <directory> <- basically acting just like a cd wrapper
 # --------------------------------------------------------------------- #
-
-# 0. Define important variables 
-CONFDIR="$HOME/.config/nickname"
-CONFILE="$CONFDIR/nickname.conf"
-CREATENICKNAME=false
-DELETENICKNAME=false # UNSUPPORTED YET
-NICKNAMEDIR=$(pwd)
-NICKNAME=""
-SUCCESS=false
+# 11  May 2018 fix for bug issue 4 -> couldn't use getopts twice. 
+OPTIND=1
 
 function usage() {
 	echo "Usage:"
@@ -94,6 +90,10 @@ function help() {
 } # help()
 
 function execute() {
+	# Grab the input arguments and cast them to familiar names
+	NICKNAME=$1
+	CONFILE=$2
+	SUCCESS=0
 	while IFS='' read -r line || [[ -n "$line" ]]; do
   
 		index=0
@@ -110,87 +110,107 @@ function execute() {
 	                if [ -d "$ENTRY_DIR" ]; then
                         	echo "cd: $ENTRY_DIR"
                         	cd $(echo "$ENTRY_DIR" | tr -d '\r')
-				SUCCESS=true
-                        	return	
+				SUCCESS=1
+                        	return $SUCCESS	
                 	else
                        		echo "Error: Nickname Mapping to an invalid directory "
                         	echo "$ENTRY_NN -> $ENTRY_DIR"
 				echo "TODO: Delete?"
-				SUCCESS=true # even though not really, just dont want that error message to pop up bellow
-                        	return 	
+				SUCCESS=1 # even though not really, just dont want that error message to pop up bellow
+                        	return $SUCCESS	
                 	fi
         	fi
 	done < "$CONFILE"
+	return $SUCCESS
 } # execute()
 
-# 1. Check the number of inputs
+function run_go2() {
+	# 0. Define important variables 
+	CONFDIR="$HOME/.config/nickname"
+	CONFILE="$CONFDIR/nickname.conf"
+	CREATENICKNAME=false
+	DELETENICKNAME=false # UNSUPPORTED YET
+	NICKNAMEDIR=$(pwd)
+	NICKNAME=""
+
+
+	# 2. Parse the inputs
+	while getopts ":hpn:d:" opt; do
+		case ${opt} in
+			h )
+			   help
+			   return 
+			   ;;
+			p )	
+			   nickname -p
+			   return 
+			   ;;
+			n )
+			   NICKNAME=${OPTARG}
+			   CREATENICKNAME=true
+			   ;;
+			d )
+			   NICKNAMEDIR=${OPTARG}
+			   if [ ! -d "$NICKNAMEDIR" ]; then
+				 echo "Input Nickname Dirctory: $NICKNAMEDIR Does Not Exist"
+				 return 
+			   fi
+			   ;;
+			\? )
+			   echo "Invalid Input: -$OPTARG"
+			   usage
+			   return 
+			   ;;
+			: )
+			   echo "Invalid Option: -$OPTARG requires an argument"
+			   usage
+			   return 
+			   ;;
+		esac
+	done
+	shift $((OPTIND -1))	
+
+	# 3. If we received either the -n or -r commands, execute them!
+	if [ "$CREATENICKNAME" = true ] ; then
+		nickname -d $NICKNAMEDIR $NICKNAME
+		return	
+	fi
+
+	if [ "$DELETENICKNAME" = true ] ; then
+		echo "TODO"
+		return	
+	fi
+
+	# 4. Yippie! we are going to a directory.  That means the nickname should be the first input
+	if [ -z "$1" ] ; then
+		echo "Invalid nickname $1."
+		return	
+	fi
+
+	NICKNAME=$1
+
+	# 5. verify that this nickname is mapped to a directory in the config file and execute
+	execute "$NICKNAME" "$CONFILE"
+	SUCCESS=$?
+
+	# 6. If we got here, we didn't find any directories with that nickname
+	if [ $SUCCESS = 0 ] ; then
+		echo "No directories found with that nickname."
+		echo "Possible nicknames:"
+		nickname -p
+	fi
+} # run
+
+# --------------------------------------------------------------- #
+# MAIN 
+# --------------------------------------------------------------- #
+
+# 0. Check the number of inputs
 if [ "$#" -eq 0 ]; then
 	echo "No Input Provided."
 	usage
 	return	
 fi
 
-# 2. Parse the inputs
-while getopts ":hpn:d:" opt; do
-	case ${opt} in
-		h )
-		   help
-		   return 
-		   ;;
-		p )	
-		   nickname -p
-		   return 
-		   ;;
-		n )
-		   NICKNAME=${OPTARG}
-		   CREATENICKNAME=true
-		   ;;
-		d )
-		   NICKNAMEDIR=${OPTARG}
-                   if [ ! -d "$NICKNAMEDIR" ]; then
-                         echo "Input Nickname Dirctory: $NICKNAMEDIR Does Not Exist"
-                         return 
-                   fi
-                   ;;
-		\? )
-		   echo "Invalid Input: -$OPTARG"
-		   usage
-		   return 
-		   ;;
-		: )
-		   echo "Invalid Option: -$OPTARG requires an argument"
-		   usage
-		   return 
-		   ;;
-	esac
-done
-shift $((OPTIND -1))	
-
-# 3. If we received either the -n or -r commands, execute them!
-if [ "$CREATENICKNAME" = true ] ; then
-	nickname -d $NICKNAMEDIR $NICKNAME
-	return	
-fi
-
-if [ "$DELETENICKNAME" = true ] ; then
-	echo "TODO"
-	return	
-fi
-
-# 4. Yippie! we are going to a directory.  That means the nickname should be the first input
-if [ -z "$1" ] ; then
-	echo "Invalid nickname $1."
-	return	
-fi
-
-NICKNAME=$1
-
-# 5. verify that this nickname is mapped to a directory in the config file and execute
-execute
-
-# 6. If we got here, we didn't find any directories with that nickname
-if [ $SUCCESS = false ] ; then
-	echo "No directories found with that nickname."
-	echo "Possible nicknames:"
-	nickname -p
-fi
+# 1. Run go2!
+run_go2 "$@"
