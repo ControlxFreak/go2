@@ -52,10 +52,12 @@ This installation guide will assume you put go2 in the $HOME/bin/go2 directory b
 
 Installation is simple.  Checkout the go2 repo wherever you want, export that path into your PATH enviornment variable so you don't need ./ and alias '. go2' so it executes in your current shell.
 
-   1. >> cd $HOME/bin
-   2. >> git clone https://github.com/ControlxFreak/go2.git	
-   3. (ADD THIS TO YOUR ~/.bashrc)
+   1. $cd $HOME/bin
+   2. $git clone https://github.com/ControlxFreak/go2.git	
+   3. add the following to your ~/.bashrc
+
 	export PATH=$PATH:$HOME/bin/go2
+
 	alias go2='. go2'
 
 # Currently Supporting
