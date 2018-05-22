@@ -6,13 +6,13 @@ A handy tool for quick navigation to commonly used, directories.  This tool util
 
 # Usage:
 
-   go2 [-hp]
+	go2 [-hp]
 
-   go2 mynickname
+	go2 mynickname
 
-         go2 -n nickname
+	go2 -n nickname
 
-         go2 -n nickname -d <path/to/directory>
+	go2 -n nickname -d <path/to/directory>
 
    -h Display Help.
 
@@ -47,4 +47,18 @@ Example:
 ----
 
 # Installation
-It is recommended that this repository is cloned to your ~/bin/ directory.  It is not required but will be assumed for this installation guide.
+
+This installation guide will assume you put go2 in the $HOME/bin/go2 directory but you may place it anywhere you'd like.
+
+Installation is simple.  Checkout the go2 repo wherever you want, export that path into your PATH enviornment variable so you don't need ./ and alias '. go2' so it executes in your current shell.
+
+   1. >> cd $HOME/bin
+   2. >> git clone https://github.com/ControlxFreak/go2.git	
+   3. (ADD THIS TO YOUR ~/.bashrc)
+	export PATH=$PATH:$HOME/bin/go2
+	alias go2='. go2'
+
+# Currently Supporting
+
+   bash
+
