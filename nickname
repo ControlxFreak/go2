@@ -180,9 +180,8 @@ NICKNAME=$1 # TODO check.
 
 # 3. Check to see if the config file exists, if it doesn't, make it!
 if [ ! -d "$CONFDIR" ]; then
-        echo "Creating $CONFILE"
-        mkdir "$CONFDIR"
-        touch "$CONFILE"
+        echo "Creating $CONFDIR"
+        mkdir -p "$CONFDIR"
 fi
   
 if [ ! -f "$CONFILE" ];then
