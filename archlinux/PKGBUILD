@@ -27,6 +27,8 @@ validpgpkeys=()
 package() {
 	cd "$pkgname-$pkgver"
 	mkdir -p "$pkgdir/usr/bin"
+	mkdir -p "$pkgdir/etc/profile.d/"
 	cp "go2" "$pkgdir/usr/bin/go2"
 	cp "nickname" "$pkgdir/usr/bin/nickname"
+	echo "alias go2='. go2'" > "$pkgdir/etc/profile.d/go2.sh"
 }
