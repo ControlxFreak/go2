@@ -1,7 +1,7 @@
 # Maintainer: Anthony Trezza <anthony.t.trezza@gmail.com>
 # Special Thanks: giacomogallina for making this pkgbuild
 pkgname=go2
-pkgver=0.1
+pkgver=0.2
 pkgrel=1
 #epoch=
 pkgdesc="A handy tool for quick navigation to commonly used directories"
@@ -22,7 +22,7 @@ install=
 changelog=
 source=("https://github.com/ControlxFreak/go2/archive/v$pkgver.tar.gz")
 noextract=()
-md5sums=('76c5a78a1ee2f5e599fa798043e4632b')
+md5sums=('9ad2ea29ec1ca47975cd1645fee87a52')
 validpgpkeys=()
 
 package() {
