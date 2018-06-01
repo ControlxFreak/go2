@@ -1,5 +1,5 @@
-# --------------------------------------------------------------------- #
 #!/bin/bash
+# --------------------------------------------------------------------- #
 # go2 
 # 	A handy tool to quickly navigate to commonly used, nicknamed
 # 	directories.  This tool utilizes the accompanying nickname 
@@ -42,6 +42,9 @@
 #       - 11 May 2018 trezza fixed bug issue 4 -> couldn't use getopts twice
 #       - 18 May 2018 trezza moved everything to a function so variables do not
 #         remain persistent in the current bash.
+#       - 01 June 2018 trezza moved #!/bin/bash to first line per bug #8 and #5
+#       - 01 June 2018 trezza now check $XDG_CONFIG_HOME instead of $HOME/.config
+#	- 01 June 2018 trezza fixed bug #7, printed bash instead of go2
 # TODO:
 # 	- Input checking
 # 	- Delete a nickname
@@ -53,10 +56,10 @@ OPTIND=1
 
 function usage() {
 	echo "Usage:"
-	echo "   $0 [-hp]"
-	echo "   $0 mynickname"
-	echo "	 $0 -n nickname"
-	echo "	 $0 -n nickname -d <path/to/directory>"
+	echo "   go2 [-hp]"
+	echo "   go2 mynickname"
+	echo "	 go2 -n nickname"
+	echo "	 go2 -n nickname -d <path/to/directory>"
 	echo "   -h Display Help."
 	echo "   -p Print the contents of the nickname file to the console." 
 	echo "   -n Create a nickname association for the given directory."
@@ -64,7 +67,7 @@ function usage() {
 } # usage()
 
 function help() {
-	echo "$0:"
+	echo "go2:"
 	echo "  A handy tool for quick navigation to commonly used, nicknamed"
 	echo "	directories.  This tool utilizes the accompanying 'nickname'"
 	echo "  tool to generate a nickname.conf file to store its"
@@ -126,7 +129,12 @@ function execute() {
 
 function run_go2() {
 	# 0. Define important variables 
-	CONFDIR="$HOME/.config/nickname"
+	if [ ! -z "$XDG_CONFIG_HOME" ]; then
+		CONFDIR="$XDG_CONFIG_HOME/nickname"
+	else
+		CONFDIR="$HOME/.config/nickname"
+	fi
+
 	CONFILE="$CONFDIR/nickname.conf"
 	CREATENICKNAME=false
 	DELETENICKNAME=false # UNSUPPORTED YET

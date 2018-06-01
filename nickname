@@ -1,5 +1,5 @@
-# --------------------------------------------------------------------- #
 #!/bin/bash
+# --------------------------------------------------------------------- #
 # nickname
 # 	A handy helper function to create the .config/nickname.conf file.
 #	The goal of this configuration file is to generate nicknames for 
@@ -39,13 +39,20 @@
 #	- 12 March 2018 trezza nickname's birthday! <(^.^)>
 #	- 08 May 2018 trezza converted to getopts.  Woah, that's handy.
 #	- 09 May 2018 trezza added MIT license
+#	- 01 June 2018 trezza moved #!/bin/bash to top line per bug #8
+#	- 01 June 2018 trezza updated to use XDG_CONFIG_HOME when possible per bug #11
 # TODO:
 # 	- Input checking to prevent some weird super hacker from embedding 
 # 	  something malicious... and/or from stupid people :)
 # --------------------------------------------------------------------- #
 
 # 0. Define variables and functions
-CONFDIR="$HOME/.config/nickname" 
+if [ ! -z "$XDG_CONFIG_HOME" ]; then
+	CONFDIR="$XDG_CONFIG_HOME/nickname"
+else
+	CONFDIR="$HOME/.config/nickname"
+fi
+
 CONFILE="$CONFDIR/nickname.conf"
 NICKNAMEDIR=$(pwd)
 NICKNAME=""

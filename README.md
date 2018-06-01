@@ -48,6 +48,9 @@ Example:
 
 # Installation
 
+## For Arch Linux:
+
+## For Other Distros:
 This installation guide will assume you put go2 in the $HOME/bin/go2 directory but you may place it anywhere you'd like.
 
 Installation is simple.  Checkout the go2 repo wherever you want, export that path into your PATH enviornment variable so you don't need ./ and alias '. go2' so it executes in your current shell.
