@@ -49,6 +49,9 @@ Example:
 # Installation
 
 ## For Arch Linux:
+It is on the AUR! https://aur.archlinux.org/packages/go2/
+
+Use your favorite aur package manager (pacaur, yaourt, etc.).
 
 ## For Other Distros:
 This installation guide will assume you put go2 in the $HOME/bin/go2 directory but you may place it anywhere you'd like.
